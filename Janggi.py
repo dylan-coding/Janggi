@@ -72,16 +72,16 @@ class JanggiGame:
             playing board and palace
             initial turn and game state
             playing pieces"""
-        self._board = [['C', 'E', 'H', 'U', '.', 'U', 'E', 'H', 'C'],
-                       ['.', '.', '.', '.', 'G', '.', '.', '.', '.'],
-                       ['.', 'N', '.', '.', '.', '.', '.', 'N', '.'],
-                       ['S', '.', 'S', '.', 'S', '.', 'S', '.', 'S'],
-                       ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
-                       ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
-                       ['s', '.', 's', '.', 's', '.', 's', '.', 's'],
-                       ['.', 'n', '.', '.', '.', '.', '.', 'n', '.'],
-                       ['.', '.', '.', '.', 'g', '.', '.', '.', '.'],
-                       ['c', 'e', 'h', 'u', '.', 'u', 'e', 'h', 'c']]
+        self._board = [[None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None],
+                       [None, None, None, None, None, None, None, None, None]]
         self._palace = [[0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3],
                         [2, 4], [2, 5], [7, 3], [7, 4], [7, 5], [8, 3], [8, 4],
                         [8, 5], [9, 3], [9, 4], [9, 5]]
@@ -90,20 +90,38 @@ class JanggiGame:
         self._red_in_check = False
         self._blue_in_check = False
         # Change implementation to self._board[x][y] = Piece(...)???
-        self._red_general = Piece('red', 'general', 'G')
-        self._red_elephant = Piece('red', 'elephant', 'E')
-        self._red_horse = Piece('red', 'horse', 'H')
-        self._red_chariot = Piece('red', 'chariot', 'C')
-        self._red_guard = Piece('red', 'guard', 'U')
-        self._red_cannon = Piece('red', 'cannon', 'N')
-        self._red_soldier = Piece('red', 'soldier', 'S')
-        self._blue_general = Piece('blue', 'general', 'g')
-        self._blue_elephant = Piece('blue', 'elephant', 'e')
-        self._blue_horse = Piece('blue', 'horse', 'h')
-        self._blue_chariot = Piece('blue', 'chariot', 'c')
-        self._blue_guard = Piece('blue', 'guard', 'u')
-        self._blue_cannon = Piece('blue', 'cannon', 'n')
-        self._blue_soldier = Piece('blue', 'soldier', 's')
+        self._board[1][4] = Piece('red', 'general', 'G')
+        self._board[0][0] = Piece('red', 'chariot', 'C')
+        self._board[0][8] = Piece('red', 'chariot', 'C')
+        self._board[0][1] = Piece('red', 'elephant', 'E')
+        self._board[0][6] = Piece('red', 'elephant', 'E')
+        self._board[0][2] = Piece('red', 'horse', 'H')
+        self._board[0][7] = Piece('red', 'horse', 'H')
+        self._board[0][3] = Piece('red', 'guard', 'U')
+        self._board[0][5] = Piece('red', 'guard', 'U')
+        self._board[2][1] = Piece('red', 'cannon', 'N')
+        self._board[2][7] = Piece('red', 'cannon', 'N')
+        self._board[3][0] = Piece('red', 'soldier', 'S')
+        self._board[3][2] = Piece('red', 'soldier', 'S')
+        self._board[3][4] = Piece('red', 'soldier', 'S')
+        self._board[3][6] = Piece('red', 'soldier', 'S')
+        self._board[3][8] = Piece('red', 'soldier', 'S')
+        self._board[8][4] = Piece('blue', 'general', 'g')
+        self._board[9][1] = Piece('blue', 'elephant', 'e')
+        self._board[9][6] = Piece('blue', 'elephant', 'e')
+        self._board[9][2] = Piece('blue', 'horse', 'h')
+        self._board[9][7] = Piece('blue', 'horse', 'h')
+        self._board[9][0] = Piece('blue', 'chariot', 'c')
+        self._board[9][8] = Piece('blue', 'chariot', 'c')
+        self._board[9][3] = Piece('blue', 'guard', 'u')
+        self._board[9][5] = Piece('blue', 'guard', 'u')
+        self._board[7][1] = Piece('blue', 'cannon', 'n')
+        self._board[7][7] = Piece('blue', 'cannon', 'n')
+        self._board[6][0] = Piece('blue', 'soldier', 's')
+        self._board[6][2] = Piece('blue', 'soldier', 's')
+        self._board[6][4] = Piece('blue', 'soldier', 's')
+        self._board[6][6] = Piece('blue', 'soldier', 's')
+        self._board[6][8] = Piece('blue', 'soldier', 's')
 
     def convert_algebraic_notation(self, notation):
         """Takes the algebraic notation used to specify squares for make_move()
@@ -135,25 +153,45 @@ class JanggiGame:
         return self._palace
 
     def print_board(self):
-        for row in self.get_board():
-            print(' '.join(row))
+        count = 1
+        for row in self._board:
+            for col in row:
+                if col is None:
+                    print('.', end=' ', flush=True)
+                else:
+                    print(col.get_image(), end=' ', flush=True)
+                count += 1
+                if count == 10:
+                    print('\n')
+                    count = 1
 
     def get_game_state(self):
         return self._game_state
 
     def is_in_check(self, player):
         if player == "red":
-            self._red_in_check
+            return self._red_in_check
         else:
-            self._blue_in_check
+            return self._blue_in_check
+
+    def get_piece(self, square):
+        """Gets a piece at a current square in [y, x] notation, returns None if
+        no piece exists at that square"""
+        piece = self._board[square[0]][square[1]]
+        return piece
 
     def make_move(self, start, end):
         """UNFINISHED IMPLEMENTATION"""
         if self.get_game_state() != "UNFINISHED":
             return False
         start = self.convert_algebraic_notation(start)
+        moving_piece = self.get_piece(start)
         end = self.convert_algebraic_notation(end)
         difference = [end[0] - start[0], end[1] - start[1]]
+        # Simple implementation of move below here:
+        # Need to check for valid move
+        self._board[end[0]][end[1]] = moving_piece
+        self._board[start[0]][start[1]] = None
 
 
 
@@ -162,3 +200,8 @@ if __name__ == "__main__":
     theApp = App()
     theApp.on_execute()
 """
+
+game = JanggiGame()
+game.print_board()
+game.make_move('a7', 'a6')
+game.print_board()
