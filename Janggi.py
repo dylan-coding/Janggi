@@ -45,6 +45,7 @@ class App:
         self.on_cleanup()
 """
 
+
 class Piece:
     """Creates a Janggi piece that defines the piece's team and type."""
 
@@ -53,6 +54,60 @@ class Piece:
         self._team = team
         self._type = type
         self._image = image
+        self._moves = []
+        self._blocked = None
+        self._palace_only = False
+        if type == 'general':
+            self._palace_only = True
+            self._moves = [[0, 0], [1, 0], [1, 1], [1, -1], [-1, 0], [-1, 1],
+                           [-1, -1], [0, 1], [0, -1]]
+        elif type == 'guard':
+            self._palace_only = True
+            self._moves = [[0, 0], [1, 0], [1, 1], [1, -1], [-1, 0], [-1, 1],
+                           [-1, -1], [0, 1], [0, -1]]
+        elif type == 'chariot':
+            self._moves = []
+            for num in range(-8, 8):
+                self._moves.append([0, num])
+            for num in range(-9, 9):
+                self._moves.append([num, 0])
+        elif type == 'elephant':
+            self._moves = [[2, 3], [2, -3], [-2, 3], [-2, -3], [3, 2], [3, -2],
+                           [-3, 2], [-3, -2]]
+            self._blocked = {0: [[0, 1], [1, 2]],
+                             1: [[0, -1], [1, -2]],
+                             2: [[0, 1], [-1, 2]],
+                             3: [[0, -1], [-1, -2]],
+                             4: [[1, 0], [2, 1]],
+                             5: [[1, 0], [2, -1]],
+                             6: [[-1, 0], [-2, 1]],
+                             7: [[-1, 0], [-2, -1]]}
+        elif type == 'horse':
+            self._moves = [[1, 2], [1, -2], [-1, 2], [-1, -2], [2, 1], [2, -1],
+                           [-2, 1], [-2, -1]]
+            self._blocked = {0: [[0, 1]],
+                             1: [[0, -1]],
+                             2: [[0, 1]],
+                             3: [[0, -1]],
+                             4: [[1, 0]],
+                             5: [[1, 0]],
+                             6: [[-1, 0]],
+                             7: [[-1, 0]]}
+        elif type == 'cannon':
+            self._moves = []
+            for num in range(-8, -2):
+                self._moves.append([0, num])
+            for num in range(2, 8):
+                self._moves.append([0, num])
+            for num in range(-9, 2):
+                self._moves.append([num, 0])
+            for num in range(2, 9):
+                self._moves.append([num, 0])
+        elif type == 'soldier':
+            if self._team == 'red':
+                self._moves = [[0, 0], [1, 0], [0, -1], [0, 1]]
+            else:
+                self._moves = [[0, 0], [-1, 0], [0, -1], [0, 1]]
 
     def get_team(self):
         return self._team
@@ -63,9 +118,31 @@ class Piece:
     def get_image(self):
         return self._image
 
+    def get_moves(self):
+        return self._moves
+
+    def get_blocked(self, move):
+        """Returns the list of squares that, if occupied, prevents the unit
+        from moving."""
+        if self._blocked is None:
+            return False
+        key = 0
+        for index in self.get_moves():
+            if move == index:
+                blocked_moves = self._blocked[key]
+                return blocked_moves
+            key += 1
+
+    def get_palace_only(self):
+        return self._palace_only
+
 
 class JanggiGame:
     """Represents the board game Janggi."""
+    # To Do:
+    # Finish Make Move for cannons
+    # add check implementation
+    # add additional rules for special movement in palace?
 
     def __init__(self):
         """Initializes the parameters for a game of Janggi, including:
@@ -89,7 +166,7 @@ class JanggiGame:
         self._current_turn = "blue"
         self._red_in_check = False
         self._blue_in_check = False
-        # Change implementation to self._board[x][y] = Piece(...)???
+        # Set pieces on board
         self._board[1][4] = Piece('red', 'general', 'G')
         self._board[0][0] = Piece('red', 'chariot', 'C')
         self._board[0][8] = Piece('red', 'chariot', 'C')
@@ -135,12 +212,10 @@ class JanggiGame:
         coordinates = []
         for char in notation:
             coordinates.append(cipher[char])
-        # if len(coordinates) == 3:
-            # coordinates.remove(coordinates[1])
+        if len(coordinates) == 3:
+            coordinates.remove(coordinates[1])
         # Reverses dimensions to [y, x] format, due to how board is stored.
-        temp = coordinates[0]
-        coordinates[0] = coordinates[1]
-        coordinates[1] = temp
+        coordinates[0], coordinates[1] = coordinates[1], coordinates[0]
         return coordinates
 
     def get_board(self):
@@ -148,6 +223,9 @@ class JanggiGame:
 
     def get_current_turn(self):
         return self._current_turn
+
+    def set_current_turn(self, team):
+        self._current_turn = team
 
     def get_palace(self):
         return self._palace
@@ -180,19 +258,49 @@ class JanggiGame:
         piece = self._board[square[0]][square[1]]
         return piece
 
+    def check_valid_turn(self, moving_piece):
+        if self.get_game_state() != "UNFINISHED" or moving_piece is None:
+            return False
+        elif self.get_current_turn() != moving_piece.get_team():
+            return False
+        return True
+
+    def check_valid_move(self, moving_piece, start, end):
+        difference = [end[0] - start[0], end[1] - start[1]]
+        captured_piece = self.get_piece(end)
+        blocked = moving_piece.get_blocked(difference)
+        if difference not in moving_piece.get_moves():
+            return False
+        if blocked:
+            if not self.check_blocked(blocked, start):
+                return False
+        if captured_piece is not None:
+            if captured_piece.get_team() == moving_piece.get_team() and \
+                    difference != [0, 0]:
+                return False
+        return True
+
+    def check_blocked(self, blocked, start):
+        for move in blocked:
+            square = [start[0] + move[0], start[1] + move[1]]
+            if self.get_piece(square) is not None:
+                return False
+
+
     def make_move(self, start, end):
         """UNFINISHED IMPLEMENTATION"""
-        if self.get_game_state() != "UNFINISHED":
-            return False
         start = self.convert_algebraic_notation(start)
         moving_piece = self.get_piece(start)
+        player = moving_piece.get_team()
         end = self.convert_algebraic_notation(end)
-        difference = [end[0] - start[0], end[1] - start[1]]
-        # Simple implementation of move below here:
-        # Need to check for valid move
+        if not self.check_valid_turn(moving_piece):
+            return False
+        # To be implemented: Cannon movement
+        if not self.check_valid_move(moving_piece, start, end):
+            return False
         self._board[end[0]][end[1]] = moving_piece
         self._board[start[0]][start[1]] = None
-
+        self.set_current_turn('red' if player == 'blue' else 'blue')
 
 
 """
@@ -201,7 +309,10 @@ if __name__ == "__main__":
     theApp.on_execute()
 """
 
-game = JanggiGame()
-game.print_board()
-game.make_move('a7', 'a6')
-game.print_board()
+g = JanggiGame()
+print(g.make_move('c7', 'c6'))  # blue
+g.make_move('c4', 'c5')  # red
+g.make_move('c10', 'a9')
+
+g.print_board()
+print(g.get_current_turn())
