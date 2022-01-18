@@ -73,7 +73,7 @@ class Piece:
                 self._moves.append([num, 0])
         elif type == 'elephant':
             self._moves = [[2, 3], [2, -3], [-2, 3], [-2, -3], [3, 2], [3, -2],
-                           [-3, 2], [-3, -2]]
+                           [-3, 2], [-3, -2], [0, 0]]
             self._blocked = {0: [[0, 1], [1, 2]],
                              1: [[0, -1], [1, -2]],
                              2: [[0, 1], [-1, 2]],
@@ -81,10 +81,11 @@ class Piece:
                              4: [[1, 0], [2, 1]],
                              5: [[1, 0], [2, -1]],
                              6: [[-1, 0], [-2, 1]],
-                             7: [[-1, 0], [-2, -1]]}
+                             7: [[-1, 0], [-2, -1]],
+                             8: []}
         elif type == 'horse':
             self._moves = [[1, 2], [1, -2], [-1, 2], [-1, -2], [2, 1], [2, -1],
-                           [-2, 1], [-2, -1]]
+                           [-2, 1], [-2, -1], [0, 0]]
             self._blocked = {0: [[0, 1]],
                              1: [[0, -1]],
                              2: [[0, 1]],
@@ -92,7 +93,8 @@ class Piece:
                              4: [[1, 0]],
                              5: [[1, 0]],
                              6: [[-1, 0]],
-                             7: [[-1, 0]]}
+                             7: [[-1, 0]],
+                             8: []}
         elif type == 'cannon':
             self._moves = []
             for num in range(-8, -2):
@@ -271,6 +273,8 @@ class JanggiGame:
         blocked = moving_piece.get_blocked(difference)
         if difference not in moving_piece.get_moves():
             return False
+        if moving_piece.get_palace_only() and end not in self.get_palace():
+            return False
         if blocked:
             if not self.check_blocked(blocked, start):
                 return False
@@ -285,7 +289,7 @@ class JanggiGame:
             square = [start[0] + move[0], start[1] + move[1]]
             if self.get_piece(square) is not None:
                 return False
-
+        return True
 
     def make_move(self, start, end):
         """UNFINISHED IMPLEMENTATION"""
@@ -299,8 +303,10 @@ class JanggiGame:
         if not self.check_valid_move(moving_piece, start, end):
             return False
         self._board[end[0]][end[1]] = moving_piece
-        self._board[start[0]][start[1]] = None
+        if start != end:
+            self._board[start[0]][start[1]] = None
         self.set_current_turn('red' if player == 'blue' else 'blue')
+        return True
 
 
 """
@@ -310,9 +316,15 @@ if __name__ == "__main__":
 """
 
 g = JanggiGame()
-print(g.make_move('c7', 'c6'))  # blue
-g.make_move('c4', 'c5')  # red
-g.make_move('c10', 'a9')
-
+g.make_move('c10', 'd8')  # blue horse moves
+g.make_move('c1', 'd3')  # red horse move
+g.make_move('c7', 'd7')  # blue soldier moves to block the blue horse
+g.make_move('c4', 'd4')  # red soldier moves to block the red horse
+g.make_move('d8', 'c6')  # invalid move, horse blocked
+g.make_move('d8', 'd8')  # blue passes the turn
+g.make_move('d3', 'd6')  # invalid move by red because blocked by own soldier
+g.make_move('d3', 'd3')  # red passes the turn
+g.make_move('h10', 'g8')  # blue horse move
+g.make_move('h1', 'g3')  # red horse move
 g.print_board()
 print(g.get_current_turn())

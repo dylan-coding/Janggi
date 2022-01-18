@@ -490,7 +490,7 @@ class TestJanggiGame(unittest.TestCase):
         g.make_move('d3', 'd3')  # red passes the turn
 
         g.make_move('h10', 'g8')  # blue horse move
-        g.make_move('h2', 'g3')  # red horse move
+        g.make_move('h1', 'g3')  # red horse move
         try:
             invalid_move_because_of_block = g.make_move('g8',
                                                         'h6')  # invalid move by blue because blocked by own soldier
@@ -1883,3 +1883,5 @@ class TestJanggiGame(unittest.TestCase):
                 "Game state should be RED_WON when the BLUE general is checkmated")
 
 
+if __name__ == '__main__':
+    unittest.main()
