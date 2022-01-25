@@ -180,91 +180,63 @@ class JanggiGame:
         self._current_turn = "blue"
         self._red_in_check = False
         self._blue_in_check = False
-        self._red_checks = {}
-        self._blue_checks = {}
+        self._red_general_square = [1, 4]
+        self._blue_general_square = [8, 4]
         # Set pieces on board
         self._board[1][4] = Piece('red', 'general', 'G')
-        self._red_checks.update({self.get_piece([1, 4]): None})
         self._board[0][0] = Piece('red', 'chariot', 'C')
-        self._red_checks.update({self.get_piece([0, 0]): None})
         self._board[0][8] = Piece('red', 'chariot', 'C')
-        self._red_checks.update({self.get_piece([0, 8]): None})
         self._board[0][1] = Piece('red', 'elephant', 'E')
-        self._red_checks.update({self.get_piece([0, 1]): None})
         self._board[0][6] = Piece('red', 'elephant', 'E')
-        self._red_checks.update({self.get_piece([0, 6]): None})
         self._board[0][2] = Piece('red', 'horse', 'H')
-        self._red_checks.update({self.get_piece([0, 2]): None})
         self._board[0][7] = Piece('red', 'horse', 'H')
-        self._red_checks.update({self.get_piece([0, 7]): None})
         self._board[0][3] = Piece('red', 'guard', 'U')
-        self._red_checks.update({self.get_piece([0, 3]): None})
         self._board[0][5] = Piece('red', 'guard', 'U')
-        self._red_checks.update({self.get_piece([0, 5]): None})
         self._board[2][1] = Piece('red', 'cannon', 'N')
-        self._red_checks.update({self.get_piece([2, 1]): None})
         self._board[2][7] = Piece('red', 'cannon', 'N')
-        self._red_checks.update({self.get_piece([2, 7]): None})
         self._board[3][0] = Piece('red', 'soldier', 'S')
-        self._red_checks.update({self.get_piece([3, 0]): None})
         self._board[3][2] = Piece('red', 'soldier', 'S')
-        self._red_checks.update({self.get_piece([3, 2]): None})
         self._board[3][4] = Piece('red', 'soldier', 'S')
-        self._red_checks.update({self.get_piece([3, 4]): None})
         self._board[3][6] = Piece('red', 'soldier', 'S')
-        self._red_checks.update({self.get_piece([3, 6]): None})
         self._board[3][8] = Piece('red', 'soldier', 'S')
-        self._red_checks.update({self.get_piece([3, 8]): None})
         self._board[8][4] = Piece('blue', 'general', 'g')
-        self._blue_checks.update({self.get_piece([8, 4]): None})
         self._board[9][1] = Piece('blue', 'elephant', 'e')
-        self._blue_checks.update({self.get_piece([9, 1]): None})
         self._board[9][6] = Piece('blue', 'elephant', 'e')
-        self._blue_checks.update({self.get_piece([9, 6]): None})
         self._board[9][2] = Piece('blue', 'horse', 'h')
-        self._blue_checks.update({self.get_piece([9, 2]): None})
         self._board[9][7] = Piece('blue', 'horse', 'h')
-        self._blue_checks.update({self.get_piece([9, 7]): None})
         self._board[9][0] = Piece('blue', 'chariot', 'c')
-        self._blue_checks.update({self.get_piece([9, 0]): None})
         self._board[9][8] = Piece('blue', 'chariot', 'c')
-        self._blue_checks.update({self.get_piece([9, 0]): None})
         self._board[9][3] = Piece('blue', 'guard', 'u')
-        self._blue_checks.update({self.get_piece([9, 3]): None})
         self._board[9][5] = Piece('blue', 'guard', 'u')
-        self._blue_checks.update({self.get_piece([9, 5]): None})
         self._board[7][1] = Piece('blue', 'cannon', 'n')
-        self._blue_checks.update({self.get_piece([7, 1]): None})
         self._board[7][7] = Piece('blue', 'cannon', 'n')
-        self._blue_checks.update({self.get_piece([7, 7]): None})
         self._board[6][0] = Piece('blue', 'soldier', 's')
-        self._blue_checks.update({self.get_piece([6, 0]): None})
         self._board[6][2] = Piece('blue', 'soldier', 's')
-        self._blue_checks.update({self.get_piece([6, 2]): None})
         self._board[6][4] = Piece('blue', 'soldier', 's')
-        self._blue_checks.update({self.get_piece([6, 4]): None})
         self._board[6][6] = Piece('blue', 'soldier', 's')
-        self._blue_checks.update({self.get_piece([6, 6]): None})
         self._board[6][8] = Piece('blue', 'soldier', 's')
-        self._blue_checks.update({self.get_piece([6, 0]): None})
 
-    def get_red_checks(self):
-        return self._red_checks
+    def set_red_in_check(self, flag):
+        """When invoked, changes the red_in_check flag to its opposite"""
+        self._red_in_check = flag
 
-    def get_blue_checks(self):
-        return self._blue_checks
-
-    def set_red_checks(self):
-        pass
-
-    def set_blue_checks(self):
-        pass
-
-    def remove_from_red_checks(self):
-        pass
-
-    def remove_from_blue_checks(self):
-        pass
+    def set_blue_in_check(self, flag):
+        """When invoked, changes the blue_in_check flag to its opposite"""
+        self._blue_in_check = flag
+            
+    def get_general_square(self, team):
+        """Gets the square that a specific general is at is at."""
+        if team == "red":
+            return self._red_general_square
+        else:
+            return self._blue_general_square
+        
+    def set_general_square(self, team, square):
+        """Sets and tracks the square the generals are at."""
+        if team == "red":
+            self._red_general_square = square
+        else:
+            self._blue_general_square = square
 
     def convert_algebraic_notation(self, notation):
         """Takes the algebraic notation used to specify squares for make_move()
@@ -374,11 +346,16 @@ class JanggiGame:
         return True
 
     def make_move(self, start, end):
-        """Only need to implement check mechanics"""
+        """Takes algebraic notation for a start and end square and checks if
+        the move is valid, performing it if it is. Reasons for a move to be
+        invalid include the wrong player attempting to move, a piece moving
+        to a square it cannot move to, or a piece being blocked by another
+        piece."""
         start = self.convert_algebraic_notation(start)
         moving_piece = self.get_piece(start)
         player = moving_piece.get_team()
         end = self.convert_algebraic_notation(end)
+        type = moving_piece.get_type()
         if not self.check_valid_turn(moving_piece) or not \
                 self.check_valid_move(moving_piece, start, end):
             return False
@@ -386,9 +363,68 @@ class JanggiGame:
                 not self.move_cannon(start, end):
             return False
         if start != end:
+            captured = self.get_piece(end)
             self.set_board(moving_piece, end)
             self.set_board(None, start)
+            if moving_piece.get_type() == 'general':
+                self.set_general_square(self.get_current_turn(), end)
+        check = self.test_checks()
+        if check == 'invalid':
+            self.set_board(moving_piece, start)
+            self.set_board(captured, end)
+            if moving_piece.get_type() == 'general':
+                self.set_general_square(self.get_current_turn(), start)
+            return False
+        elif check == 'red checks':
+            self.set_blue_in_check(True)
+        elif check == 'blue checks':
+            self.set_red_in_check(True)
+        else:
+            self.set_blue_in_check(False)
+            self.set_red_in_check(False)
         self.set_current_turn('red' if player == 'blue' else 'blue')
+        return True
+    
+    def test_checks(self):
+        red_gen = self.get_general_square('red')
+        blue_gen = self.get_general_square('blue')
+        turn = self.get_current_turn()
+        check = False
+        row_count = 0
+        for row in self.get_board():
+            col_count = 0
+            for col in row:
+                if col is not None:
+                    piece_team = col.get_team()
+                    start = [row_count, col_count]
+                    if turn == 'red':
+                        if piece_team == 'red':
+                            if self.test_move(start, blue_gen) is True:
+                                check = 'red checks'
+                        else:
+                            if self.test_move(start, red_gen) is True:
+                                check = 'invalid'
+                                return check
+                    else:
+                        if piece_team == 'blue':
+                            if self.test_move(start, red_gen) is True:
+                                check = 'blue checks'
+                        else:
+                            if self.test_move(start, blue_gen) is True:
+                                check = 'invalid'
+                                return check
+                col_count += 1
+            row_count += 1
+        return check
+    
+    def test_move(self, start, end):
+        """Tests a move for a piece to see if it would be valid."""
+        moving_piece = self.get_piece(start)
+        if not self.check_valid_move(moving_piece, start, end):
+            return False
+        if moving_piece.get_type() == 'cannon' and \
+                not self.move_cannon(start, end):
+            return False
         return True
 
     def move_cannon(self, start, end):
@@ -441,16 +477,63 @@ if __name__ == "__main__":
 """
 
 g = JanggiGame()
-g.make_move('g7', 'h7')  # blue soldier moves to make a screen
-g.make_move('g4', 'g5')  # red soldier moves to make a future screen
+g.make_move('c7', 'c6')  # blue
+g.make_move('c1', 'd3')  # red
+g.make_move('b10', 'd7')  # blue
+g.make_move('b3', 'e3')  # red
+g.make_move('c10', 'd8')
+g.make_move('h1', 'g3')
+g.make_move('e7', 'e6')
+g.make_move('e3', 'e6')  # red cannon captures soldier -- check here
+print(g.get_game_state().upper())
+print(g.is_in_check('red'))
+print(g.is_in_check('blue'))
 
-g.make_move('h8', 'h5')  # blue cannon moves front
-g.make_move('g5', 'g5')  # red passes
-g.print_board()
-g.make_move('h5', 'a5')  # blue cannon jumps west
+g.make_move('h8', 'c8')  # blue moves -- check here
+g.make_move('d3', 'e5')  # red
+g.make_move('c8', 'c4')  # blue cannon captures red soldier -- check here
+print(g.get_game_state().upper())
+print(g.is_in_check('red'))
+print(g.is_in_check('blue'))
 
-# now try moving that cannon again back to make sure it was actually placed there
-g.make_move('g5', 'g5')  # red passes
-g.make_move('a5', 'h5')
+g.make_move('e5', 'c4')  # red horse captures blue cannon
+g.make_move('i10', 'i8')  # blue chariot moves
+g.make_move('g4', 'f4')
+g.make_move('i8', 'f8')  # blue chariot moves sideway
+g.make_move('g3', 'h5')
+g.make_move('h10', 'g8')  # blue horse
+g.make_move('e6', 'e3')  # red CHECKS blue using a cannon -- special test
+# for checks using a cannon -- check here
+
+print(g.get_game_state().upper())
+print(g.is_in_check('red'))
+print(g.is_in_check('blue'))  # should be True
+
+g.make_move('e9', 'd9')  # blue moves
+g.make_move('c4', 'e5')  # red
+g.make_move('c6', 'd6')
+g.make_move('e5', 'c4')
+g.make_move('a7', 'a6')  # blue
+g.make_move('h3', 'h9')  # red cannon moves to a position where it COULD
+# Check but has not. -- check here
+g.make_move('a10', 'a7')
+g.make_move('c4', 'd6')  # red horse captures blue soldier
+g.make_move('a6', 'b6')
+g.make_move('h5', 'g7')
+g.make_move('b8', 'b1')  # blue cannon captures red elephant
+g.make_move('a1', 'b1')  # red chariot captures blue cannon
+g.make_move('a7', 'a4')
+g.make_move('b1', 'c1')
+g.make_move('a4', 'a2')  # blue CHECKS red using a chariot -- check here
+
+print(g.get_game_state().upper())
+print(g.is_in_check('red'))   # should be True
+print(g.is_in_check('blue'))
+
+g.make_move('e2', 'e1')  # red general moves to avoid capture -- check
+
+print(g.get_game_state().upper())
+print(g.is_in_check('red'))
+print(g.is_in_check('blue'))
+
 g.print_board()
-print(g.get_current_turn())
