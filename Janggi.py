@@ -1,9 +1,9 @@
 # Author: Dylan Smith
 # Description: A simple implementation of the board game Janggi, using PyGame
 
-import copy
 import pygame
 from pygame.locals import *
+from copy import *
 
 # Commented out code is for pyGame implementation
 """
@@ -239,6 +239,11 @@ class JanggiGame:
         """When invoked, changes the blue_in_check flag to its opposite."""
         self._blue_in_check = flag
     
+    def set_checks(self, red, blue):
+        """Calls the set_red_in_check() and set_blue_in_check() functions"""
+        self.set_red_in_check(red)
+        self.set_blue_in_check(blue)
+    
     def get_general_square(self, team):
         """Gets the square that a specific general is at is at."""
         if team == "red":
@@ -283,6 +288,10 @@ class JanggiGame:
     def set_board(self, piece, square):
         """Sets or moves a specific piece to the designated square."""
         self._board[square[0]][square[1]] = piece
+        
+    def set_whole_board(self, board):
+        """Replaces the entire board with the version provided."""
+        self._board = board
     
     def get_current_turn(self):
         """Returns the team of the current turn."""
@@ -336,10 +345,9 @@ class JanggiGame:
     def check_valid_turn(self, moving_piece):
         """Checks that the game is not finished, and that the correct player
         is attempting to move."""
-        if self.get_game_state() != "UNFINISHED" or moving_piece is None:
-            return False
-        elif self.get_current_turn() != moving_piece.get_team():
-            return False
+        if self.get_game_state() != "UNFINISHED" or self.get_current_turn() \
+                != moving_piece.get_team():
+            return False  # Game is over or wrong player is attempting to move
         return True
     
     def check_valid_move(self, moving_piece, start, end):
@@ -356,16 +364,16 @@ class JanggiGame:
         captured_piece = self.get_piece(end)
         blocked = moving_piece.get_blocked(difference)
         if difference not in moving_piece.get_moves():
-            return False
+            return False  # Attempting invalid move
         if moving_piece.get_palace_only() and end not in self.get_palace():
-            return False
-        if blocked:
+            return False  # Attempting to move guard or general outside palace
+        if blocked:  # Check if piece can be and is blocked
             if not self.check_blocked(blocked, start):
-                return False
+                return False  # Piece blocked by another piece
         if captured_piece is not None:
             if captured_piece.get_team() == moving_piece.get_team() and \
                     difference != [0, 0]:
-                return False
+                return False  # Attempting to capture own piece
         return True
     
     def check_blocked(self, blocked, start):
@@ -377,7 +385,7 @@ class JanggiGame:
         """
         for move in blocked:
             square = [start[0] + move[0], start[1] + move[1]]
-            if self.get_piece(square) is not None:
+            if self.get_piece(square) is not None:  # Movement is blocked
                 return False
         return True
     
@@ -392,54 +400,70 @@ class JanggiGame:
         :param end: The square being moved to.
         :return: Bool.
         """
-        if self.get_game_state() != 'UNFINISHED':
-            return False
-        if isinstance(start, str):
-            start = self.convert_algebraic_notation(start)
+        start = self.convert_algebraic_notation(start)
         moving_piece = self.get_piece(start)
         if moving_piece is None:
-            return False
+            return False  # No piece at start square
         player = moving_piece.get_team()
         captured = None
-        if isinstance(end, str):
-            end = self.convert_algebraic_notation(end)
+        end = self.convert_algebraic_notation(end)
         piece_type = moving_piece.get_type()
-        if not self.check_valid_turn(moving_piece) or not \
-                self.check_valid_move(moving_piece, start, end):
+        if not self.check_move(start, end, moving_piece, piece_type):
             return False
-        if piece_type == 'cannon' and not self.move_cannon(start, end):
-            return False
-        if piece_type == 'chariot' and not self.move_chariot(start, end):
-            return False
-        if start != end:
+        if start != end:  # Turn not being passed
             captured = self.get_piece(end)
             self.set_board(moving_piece, end)
-            self.set_board(None, start)
-            if piece_type == 'general':
+            self.set_board(None, start)  # Empties square Piece moved from
+            if piece_type == 'general':  # Set new location for General
                 self.set_general_square(self.get_current_turn(), end)
+        # Determine if move puts other team in check, or if it's invalid
         check = self.test_checks()
         if check == 'invalid':  # Move was invalid, reset board
             self.set_board(moving_piece, start)
             self.set_board(captured, end)
-            if piece_type == 'general':
+            if piece_type == 'general':  # Reset General's position
                 self.set_general_square(self.get_current_turn(), start)
             return False
         elif check == 'red checks':  # Red has placed Blue in check
-            self.set_blue_in_check(True)
-            self.set_red_in_check(False)
+            self.set_checks(False, True)
         elif check == 'blue checks':  # Blue has placed Red in check
-            self.set_red_in_check(True)
-            self.set_blue_in_check(False)
-        else:  # No check has been made
-            self.set_blue_in_check(False)
-            self.set_red_in_check(False)
-        self.set_current_turn('red' if player == 'blue' else 'blue')
-        if self.get_current_turn() == 'red' and self.is_in_check('red'):
-            self.checkmate_checker('red')
-        elif self.get_current_turn() == 'blue' and self.is_in_check('blue'):
-            self.checkmate_checker('blue')
+            self.set_checks(True, False)
+        else:  # Neither side in check
+            self.set_checks(False, False)
+        self.change_turn(player)
         return True
     
+    def change_turn(self, player):
+        """
+        Passes the turn to the next player, and invokes a test for checkmate
+        if the current turn put the opponent in check.
+        :param player: Current turn's player.
+        :return: None.
+        """
+        self.set_current_turn('red' if player == 'blue' else 'blue')
+        if self.get_current_turn() == 'red' and self.is_in_check('red'):
+            self.checkmate_checker('red')  # Check for checkmate against red
+        elif self.get_current_turn() == 'blue' and self.is_in_check('blue'):
+            self.checkmate_checker('blue')  # Check for checkmate against blue
+    
+    def check_move(self, start, end, moving_piece, piece_type):
+        """
+        Determines if the move can be made, or if it is illegal.
+        :param start: Square being moved from.
+        :param end: Square being moved to.
+        :param moving_piece: Piece to be moved.
+        :param piece_type: The moving Piece's type.
+        :return: Bool.
+        """
+        if not self.check_valid_turn(moving_piece) or not \
+                self.check_valid_move(moving_piece, start, end):
+            return False  # Invalid move or wrong player moving
+        if piece_type == 'cannon' and not self.move_cannon(start, end):
+            return False  # Cannon attempting illegal move
+        if piece_type == 'chariot' and not self.move_chariot(start, end):
+            return False  # Chariot attempting illegal move
+        return True
+        
     def test_checks(self):
         """
         Checks the state of the board after a move was made to see if one
@@ -508,18 +532,18 @@ class JanggiGame:
         :param end: The square being moved to.
         :return: Bool.
         """
-        if start[0] == end[0]:
+        if start[0] == end[0]:  # Chariot attempting horizontal movement
             arr = [start[1], end[1]]
             arr.sort()
             for i in range(arr[0] + 1, arr[1] - 1):
                 if self.get_piece([start[0], i]) is not None:
-                    return False
-        else:
+                    return False  # Piece between Chariot and destination
+        else:  # Chariot attempting vertical movement
             arr = [start[0], end[0]]
             arr.sort()
             for i in range(arr[0] + 1, arr[1] - 1):
                 if self.get_piece([i, start[1]]) is not None:
-                    return False
+                    return False  # Piece between Chariot and destination
         return True
     
     def move_cannon(self, start, end):
@@ -532,15 +556,15 @@ class JanggiGame:
         :return: Bool.
         """
         if start[0] != end[0] and start[1] != end[1]:
-            return False
+            return False  # Cannon attempting diagonal movement
         if start == end:
-            return True
+            return True  # Cannon used to pass turn
         if self.get_piece(end) is not None:
             if self.get_piece(end).get_type() == 'cannon':
-                return False
-        if start[0] == end[0]:
+                return False  # Cannon attempting to capture another cannon
+        if start[0] == end[0]:  # Test for valid horizontal movement
             return self.move_cannon_horizon(start, end)
-        else:
+        else:  # Test for valid vertical movement
             return self.move_cannon_vert(start, end)
     
     def move_cannon_horizon(self, start, end):
@@ -558,9 +582,9 @@ class JanggiGame:
         for i in range(arr[0] + 1, arr[1]):
             if self.get_piece([start[0], i]) is not None:
                 if self.get_piece([start[0], i]).get_type() == 'cannon':
-                    return False
+                    return False  # Cannon attempting to jump another cannon
                 count += 1
-        return True if count == 1 else False
+        return True if count == 1 else False  # Must be one piece in path
     
     def move_cannon_vert(self, start, end):
         """
@@ -577,38 +601,89 @@ class JanggiGame:
         for i in range(arr[0] + 1, arr[1]):
             if self.get_piece([i, start[1]]) is not None:
                 if self.get_piece([i, start[1]]).get_type() == 'cannon':
-                    return False
+                    return False  # Cannon attempting to jump another cannon
                 count += 1
-        return True if count == 1 else False
+        return True if count == 1 else False  # Must be one piece in path
     
     def checkmate_checker(self, team):
-        row_count = 0
+        """
+        Checks board for a checkmate situation.
+        :param team: The team currently in check.
+        :return: Bool.
+        """
+        rows = 0
         for row in self.get_board():
-            col_count = 0
-            for col in row:
+            cols = 0
+            for col in row:  # Search board for pieces to test
                 if col is not None:
-                    piece_team = col.get_team()
-                    if piece_team == team:
-                        start = [row_count, col_count]
-                        moves = col.get_moves()
-                        for move in moves:
-                            end = [0, 0]
-                            end[0] = move[0] + start[0]
-                            end[1] = move[1] + start[1]
-                            if (0 <= end[0] < 10) and (0 <= end[1] < 9):
-                                pass
-                                """result = self.make_move(start, end, True)
-                                if result is False:
-                                    return result"""
-                col_count += 1
-            row_count += 1
-                            
-        if team == 'red':
-            # self.set_game_state('BLUE WON')
-            pass
-        else:
-            # self.set_game_state('RED WON')
-            pass
+                    result = self.test_check_for_mate(col, team, rows, cols)
+                    if result is True:
+                        return True  # Valid move found, no checkmate
+                cols += 1
+            rows += 1
+        if team == 'red' and result is False:
+            self.set_game_state('BLUE_WON')  # No valid moves found, Blue wins
+        elif team == 'blue' and result is False:
+            self.set_game_state('RED_WON')  # No valid moves found, Red wins
+            
+    def test_check_for_mate(self, moving_piece, team, row, col):
+        """
+        Tests the current check to see if it is a checkmate.
+        :param moving_piece: Piece to be moved.
+        :param team: Team currently in check.
+        :param row: Row position of moving_piece's square.
+        :param col: Col position of moving_pieces's square.
+        :return: Bool.
+        """
+        piece_team = moving_piece.get_team()
+        if piece_team == team:
+            start = [row, col]
+            for move in moving_piece.get_moves():  # Test all possible moves
+                end = [0, 0]
+                end[0] = move[0] + start[0]
+                end[1] = move[1] + start[1]
+                if (0 <= end[0] < 10) and (0 <= end[1] < 9) and start != end:
+                    result = self.test_check_break(start, end)
+                    if result is True:
+                        return True  # Possible move found, no checkmate
+        return False
+    
+    def test_check_break(self, start, end):
+        """
+        Tests if the proposed move can break check.
+        :param start: Proposed square being moved from.
+        :param end: Proposed square being moved to.
+        :return: Bool.
+        """
+        backup = deepcopy(self.get_board())
+        moving_piece = self.get_piece(start)
+        captured = None
+        piece_type = moving_piece.get_type()
+        if not self.check_move(start, end, moving_piece, piece_type):
+            return False
+        if start != end:
+            captured = self.get_piece(end)
+            self.set_board(moving_piece, end)
+            self.set_board(None, start)
+            if piece_type == 'general':
+                self.set_general_square(self.get_current_turn(), end)
+        check = self.test_checks()
+        if check == 'invalid':  # Move was invalid, reset board
+            self.set_board(moving_piece, start)
+            self.set_board(captured, end)
+            if piece_type == 'general':
+                self.set_general_square(self.get_current_turn(), start)
+            self.set_whole_board(backup)
+            return False
+        elif check == 'red checks' and self.is_in_check('red'):
+            self.set_whole_board(backup)
+            return False
+        elif check == 'blue checks' and self.is_in_check('blue'):
+            self.set_whole_board(backup)
+            return False
+        else:  # Neither side in check
+            self.set_whole_board(backup)
+            return True
 
 
 """
@@ -616,67 +691,3 @@ if __name__ == "__main__":
     theApp = App()
     theApp.on_execute()
 """
-
-g = JanggiGame()
-
-print(g.make_move('c7', 'c6'))  # blue
-print(g.make_move('c1', 'd3'))  # red
-print(g.make_move('b10', 'd7'))  # blue
-print(g.make_move('b3', 'e3'))  # red
-print(g.make_move('c10', 'd8'))
-print(g.make_move('h1', 'g3'))
-print(g.make_move('e7', 'e6'))
-print(g.make_move('e3', 'e6'))  # red cannon captures soldier -- check here
-print('red False:', g.is_in_check('red'))
-print(g.get_game_state())
-print('blue False:', g.is_in_check('blue'))
-print()
-
-print(g.make_move('h8', 'c8'))  # blue moves -- check here
-print(g.make_move('d3', 'e5'))  # red
-print(g.make_move('c8', 'c4'))  # blue cannon captures red soldier -- check
-# here
-print('red False:', g.is_in_check('red'))
-print(g.get_game_state())
-print('blue False:', g.is_in_check('blue'))
-print()
-
-print(g.make_move('e5', 'c4'))  # red horse captures blue cannon
-print(g.make_move('i10', 'i8'))  # blue chariot moves
-print(g.make_move('g4', 'f4'))
-print(g.make_move('i8', 'f8'))  # blue chariot moves sideway
-print(g.make_move('g3', 'h5'))
-print(g.make_move('h10', 'g8'))  # blue horse
-print(g.make_move('e6', 'e3'))  # red CHECKS blue using a cannon -- special
-# test for checks using a cannon -- check here
-print('red False:', g.is_in_check('red'))
-print(g.get_game_state())
-print('blue True:', g.is_in_check('blue'))  # True
-print()
-
-print(g.make_move('e9', 'd9'))  # blue moves
-print(g.make_move('c4', 'e5'))  # red
-print(g.make_move('c6', 'd6'))
-print(g.make_move('e5', 'c4'))
-print(g.make_move('a7', 'a6'))  # blue
-print(g.make_move('h3', 'h9'))  # red cannon moves to a position where it
-# COULD Check but has not. -- check here
-print(g.make_move('a10', 'a7'))
-print(g.make_move('c4', 'd6'))  # red horse captures blue soldier
-print(g.make_move('a6', 'b6'))
-print(g.make_move('h5', 'g7'))
-print(g.make_move('b8', 'b1'))  # blue cannon captures red elephant
-print(g.make_move('a1', 'b1'))  # red chariot captures blue cannon
-print(g.make_move('a7', 'a4'))
-print(g.make_move('b1', 'c1'))
-print(g.make_move('a4', 'a2'))  # blue CHECKS red using a chariot -- check here
-
-print(g.make_move('e2', 'e1'))  # red general moves to avoid capture --
-# check after this
-
-print(g.make_move('i7', 'h7'))  # blue moves
-print(g.make_move('c1', 'c9'))  # red chariot moves to the palace to
-# CHECKMATE blue
-print('red False:', g.is_in_check('red'))
-print(g.get_game_state(), "should be RED_WON")
-print('blue True:', g.is_in_check('blue'))  # True
