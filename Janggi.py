@@ -5,47 +5,6 @@ import pygame
 from pygame.locals import *
 from copy import *
 
-# Commented out code is for pyGame implementation
-"""
-class App:
-
-    def __init__(self):
-        self._running = True
-        self._display_surf = None
-        self.size = self.weight, self.height = 640, 400
-
-    def on_init(self):
-        pygame.init()
-        self._display_surf = pygame.display.set_mode(self.size,
-                                                     pygame.HWSURFACE |
-                                                     pygame.DOUBLEBUF)
-        self._running = True
-
-    def on_event(self, event):
-        if event.type == pygame.QUIT:
-            self._running = False
-
-    def on_loop(self):
-        pass
-
-    def on_render(self):
-        pass
-
-    def on_cleanup(self):
-        pygame.quit()
-
-    def on_execute(self):
-        if self.on_init() == False:
-            self._running = False
-
-        while self._running:
-            for event in pygame.event.get():
-                self.on_event(event)
-            self.on_loop()
-            self.on_render()
-        self.on_cleanup()
-"""
-
 
 class Piece:
     """Creates a Janggi piece that defines the piece's team, type,
@@ -168,8 +127,6 @@ class JanggiGame:
     """
     
     # To Do:
-    # add check implementation
-    # add additional rules for special movement in palace?
     
     def __init__(self):
         """
@@ -684,10 +641,3 @@ class JanggiGame:
         else:  # Neither side in check
             self.set_whole_board(backup)
             return True
-
-
-"""
-if __name__ == "__main__":
-    theApp = App()
-    theApp.on_execute()
-"""
